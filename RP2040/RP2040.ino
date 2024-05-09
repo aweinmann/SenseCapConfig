@@ -695,7 +695,7 @@ void setup()
  */
 void loop()
 {
-    if (i > 5000)
+    if (i > 500)
     {
         i = 0;
 

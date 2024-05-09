@@ -37,6 +37,23 @@ void init_templates()
     ui_templates[BT_SMALL].sensor_ui.unit_y = 27;
     ui_templates[BT_SMALL].sensor_ui.font_size = 20;
 
+    // Medium type
+    ui_templates[BT_MEDIUM].type = BT_MEDIUM;
+    ui_templates[BT_MEDIUM].sensor_ui.height = 105;
+    ui_templates[BT_MEDIUM].sensor_ui.width = 214;
+    ui_templates[BT_MEDIUM].sensor_ui.logo_width = 45;
+    ui_templates[BT_MEDIUM].sensor_ui.logo_height = 45;
+    ui_templates[BT_MEDIUM].sensor_ui.logo_x = -5;
+    ui_templates[BT_MEDIUM].sensor_ui.logo_y = 10;
+    ui_templates[BT_MEDIUM].sensor_ui.label_x = 0;
+    ui_templates[BT_MEDIUM].sensor_ui.label_y = -5;
+    ui_templates[BT_MEDIUM].sensor_ui.data_x = 35;
+    ui_templates[BT_MEDIUM].sensor_ui.data_y = 10;
+    ui_templates[BT_MEDIUM].sensor_ui.data_width = 115;
+    ui_templates[BT_MEDIUM].sensor_ui.unit_x = 150;
+    ui_templates[BT_MEDIUM].sensor_ui.unit_y = 10;
+    ui_templates[BT_MEDIUM].sensor_ui.font_size = 20;
+
     // Large type
     ui_templates[BT_LARGE].type = BT_LARGE;
     ui_templates[BT_LARGE].sensor_ui.height = 164;
@@ -162,7 +179,7 @@ void create_sensor_button(int size, lv_obj_t *parent, ha_sensor_t *sensor, int b
     lv_obj_set_style_text_font(sensor->label, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     sensor->data = lv_label_create(sensor->btn);
-    lv_obj_set_width(sensor->data, 100);
+    lv_obj_set_width(sensor->data, 115);
     lv_obj_set_height(sensor->data, LV_SIZE_CONTENT); /// 2
     lv_obj_set_x(sensor->data, ui_templates[size].sensor_ui.data_x);
     lv_obj_set_y(sensor->data, ui_templates[size].sensor_ui.data_y);
@@ -170,7 +187,7 @@ void create_sensor_button(int size, lv_obj_t *parent, ha_sensor_t *sensor, int b
     lv_obj_set_style_text_color(sensor->data, lv_color_hex(text_color), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(sensor->data, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(sensor->data, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(sensor->data, &ui_font_font2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(sensor->data, &ui_font_font3, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     sensor->unit = lv_label_create(sensor->btn);
     lv_obj_set_width(sensor->unit, LV_SIZE_CONTENT);  /// 1
@@ -180,7 +197,7 @@ void create_sensor_button(int size, lv_obj_t *parent, ha_sensor_t *sensor, int b
     lv_label_set_text(sensor->unit, unit);
     lv_obj_set_style_text_color(sensor->unit, lv_color_hex(text_color), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(sensor->unit, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(sensor->unit, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(sensor->unit, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
 
 /**
