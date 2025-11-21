@@ -48,6 +48,83 @@ String SDDataString = "";
 #define PKT_TYPE_CMD_CONFIG_ACK 0xC1
 #define PKT_TYPE_CMD_CONFIG_COMPLETE 0xC2
 
+static const char ha_config_json[] = R"json(
+{
+    "url": "<mqtt_url>",
+    "username": "<username>",
+    "password": "<password>",
+    "pages": [
+        {
+            "name": "Wohnzimmer",
+            "label": "Wohnzimmer",
+            "type": "2x3",
+            "sensors": [
+                {
+                    "name": "Temperature",
+                    "label": "Temperature",
+                    "unit": "°C",
+                    "key": "temp",
+                    "x": "1",
+                    "y": "1",
+                    "icon": "temperature",
+                    "size": "medium"
+                },
+                {
+                    "name": "Outdoor Temp",
+                    "label": "Outdoor Temp",
+                    "unit": "°C",
+                    "key": "outdoor_temp",
+                    "x": "2",
+                    "y": "1",
+                    "icon": "temperature",
+                    "size": "medium"
+                },
+                {
+                    "name": "Outdoor Hum",
+                    "label": "Outdoor Hum",
+                    "unit": "%",
+                    "key": "outdoor_hum",
+                    "x": "2",
+                    "y": "2",
+                    "icon": "humidity",
+                    "size": "medium"
+                },
+                {
+                    "name": "Humidity",
+                    "label": "Humidity",
+                    "unit": "%",
+                    "key": "humidity",
+                    "x": "1",
+                    "y": "2",
+                    "icon": "humidity",
+                    "size": "medium"
+                },
+                {
+                    "name": "CO2",
+                    "label": "CO2",
+                    "unit": "ppm",
+                    "key": "co2",
+                    "x": "1",
+                    "y": "3",
+                    "icon": "co2",
+                    "size": "medium"
+                },
+                {
+                    "name": "tVOC",
+                    "label": "tVOC",
+                    "unit": "",
+                    "key": "tvoc",
+                    "x": "2",
+                    "y": "3",
+                    "icon": "tvoc",
+                    "size": "medium"
+                }
+            ]
+        }
+    ]
+}
+)json";
+
 // Global variables
 int cnt = 0;
 int i = 0;
@@ -84,10 +161,10 @@ void sensor_data_send(uint8_t type, float data)
 
 /**
  * @brief Sends sensor data to a file.
- * 
+ *
  * This function sends sensor data of a specified type to a file. The data is passed as a character array
- * and its length is also specified. 
- * 
+ * and its length is also specified.
+ *
  * @param type The type of sensor data being sent.
  * @param data A pointer to the character array containing the sensor data.
  * @param len The length of the sensor data in bytes.
@@ -135,7 +212,7 @@ void printUint16Hex(uint16_t value)
 
 /**
  * @brief Prints the serial number of the device.
- * 
+ *
  * @param serial0 The first 16-bit serial number.
  * @param serial1 The second 16-bit serial number.
  * @param serial2 The third 16-bit serial number.
@@ -188,10 +265,10 @@ void sensor_aht_init(void)
 
 /**
  * @brief Gets the temperature and humidity readings from the AHT20 sensor.
- * 
+ *
  * This function reads the temperature and humidity values from the AHT20 sensor
  * and stores them in the global variables `temperature` and `humidity`.
- * 
+ *
  * @note This function assumes that the AHT20 sensor has been initialized and is
  * ready to read data.
  */
@@ -293,9 +370,9 @@ void sensor_sgp40_init(void)
 
 /**
  * @brief Gets the sensor data from the SGP40 sensor.
- * 
+ *
  * This function retrieves the sensor data from the SGP40 sensor and stores it in a global variable.
- * 
+ *
  * @return void
  */
 void sensor_sgp40_get(void)
@@ -394,12 +471,12 @@ void sensor_scd4x_init(void)
 
 /**
  * @brief Gets sensor data from the SCD4x sensor.
- * 
+ *
  * This function retrieves data from the SCD4x sensor and stores it in a buffer.
  * The data can then be read from the buffer using the `sensor_scd4x_read` function.
- * 
+ *
  * @note This function assumes that the SCD4x sensor has already been initialized.
- * 
+ *
  * @return None.
  */
 void sensor_scd4x_get(void)
@@ -490,7 +567,7 @@ void beep_on(void)
 
 /**
  * Reads the analog voltage from the Grove ADC and prints the result to the serial monitor.
- * 
+ *
  * @return void
  */
 void grove_adc_get(void)
@@ -513,7 +590,7 @@ static bool shutdown_flag = false;
 
 /**
  * @brief Callback function that is called when a packet is received.
- * 
+ *
  * @param buffer Pointer to the buffer containing the received packet.
  * @param size Size of the received packet in bytes.
  */
@@ -545,63 +622,29 @@ void onPacketReceived(const uint8_t *buffer, size_t size)
     case PKT_TYPE_CMD_CONFIG:
     {
         Serial.println("cmd config");
-        // read the configuration file from SD card
 
-        // check that SD Card in mounted
-        if (sd_init_flag == 1)
+        const size_t size = sizeof(ha_config_json) - 1;
+        if (size == 0)
         {
-            Serial.println("SD Card is mounted");
-        }
-        else
-        {
-            Serial.println("SD Card is not mounted");
-            // sensor_data_send(PKT_TYPE_CMD_CONFIG_ACK, 0);
+            sensor_data_send(PKT_TYPE_CMD_CONFIG_ACK, 0);
             break;
         }
 
-        File configFile = SD.open(CONFIG_FILE);
-        if (!configFile)
+        for (size_t offset = 0; offset < size; offset += 31)
         {
-            Serial.println("Failed to open config file");
-            sensor_data_send(PKT_TYPE_CMD_CONFIG_ACK, 0);
-        }
-        else
-        {
-            Serial.println("Opened config file");
-            size_t size = configFile.size();
-            // Allocate a buffer to store contents of the file.
-            std::unique_ptr<char[]> buf(new char[size]);
-
-            // read file into buffer
-            configFile.readBytes(buf.get(), size);
-            Serial.printf("Read file size: %d (mod 31 - %f)\n", size, size%31);
-
-            // close file
-            configFile.close();
-            Serial.println("Close file");
-
-            // prinf file to serial port
-            // Serial.println(buf.get());
-            // send buffer to serial port
-            // ESP32Channel.send(buf.get(), size);
-            // loop to send the file with 31 bytes per packet
-            for (int i = 0; i < size; i += 31)
+            uint8_t code = PKT_TYPE_CMD_CONFIG_ACK;
+            size_t len = 31;
+            if (offset + len >= size)
             {
-                int len = 31;
-                int code = PKT_TYPE_CMD_CONFIG_ACK;
-                if(i + 31 > size)
-                {
-                    len = size - i;
-                    code = PKT_TYPE_CMD_CONFIG_COMPLETE;
-                }
-
-                Serial.printf("b : %.*s\n", len, &buf.get()[i]);
-
-                sensor_file_send(code, &buf.get()[i], len);
-                delay(10);
+                len = size - offset;
+                code = PKT_TYPE_CMD_CONFIG_COMPLETE;
             }
-            // sensor_file_send(PKT_TYPE_CMD_CONFIG_ACK, buf.get());
+
+            Serial.printf("b : %.*s\n", (int)len, &ha_config_json[offset]);
+            sensor_file_send(code, const_cast<char *>(&ha_config_json[offset]), len);
+            delay(10);
         }
+        break;
     }
     default:
         break;
@@ -610,10 +653,9 @@ void onPacketReceived(const uint8_t *buffer, size_t size)
 
 /************************ setup & loop ****************************/
 
-
 /**
  * @brief Initializes the RP2040 board and sets it up for use.
- * 
+ *
  * This function is called once when the board is powered on or reset. It initializes
  * any necessary hardware and sets up the board for use. Any pins or peripherals that
  * need to be used should be configured in this function.
